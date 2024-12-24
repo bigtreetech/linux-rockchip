@@ -29,6 +29,8 @@ properties:
       # compatible must be listed in alphabetical order, ordered by compatible.
       # The description in the comment is mandatory for each compatible.
 
+        # BIGTREETECH PITFT series(4.3", 5.0", 7.0") 800x480 TFT LCD panel
+      - btt-pitft
         # AU Optronics Corporation 8.0" WUXGA TFT LCD panel
       - auo,b080uan01
         # Boe Corporation 8.0" WUXGA TFT LCD panel
