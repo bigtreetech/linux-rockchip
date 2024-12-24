@@ -234,15 +234,8 @@
 	status = "okay";
 };
 
-&vp0 {
-	rockchip,plane-mask = <(1 << ROCKCHIP_VOP2_CLUSTER0 | 1 << ROCKCHIP_VOP2_ESMART0 | 1 <<
-	ROCKCHIP_VOP2_SMART0 | 1 << ROCKCHIP_VOP2_CLUSTER1 | 1 << ROCKCHIP_VOP2_ESMART1 | 1 <<
-	ROCKCHIP_VOP2_SMART1)>;
-	rockchip,primary-plane = <ROCKCHIP_VOP2_SMART0>;
-};
-
 &hdmi {
-	status = "okay";
+	status = "disabled";
 	rockchip,phy-table =
 		<92812500  0x8009 0x0000 0x0270>,
 		<165000000 0x800b 0x0000 0x026d>,
@@ -253,7 +246,7 @@
 };
 
 &hdmi_in_vp0 {
-	status = "okay";
+	status = "disabled";
 };
 
 &hdmi_in_vp1 {
@@ -261,7 +254,7 @@
 };
 
 &hdmi_sound {
-	status = "okay";
+	status = "disabled";
 };
 
 &i2c0 {
@@ -587,13 +580,13 @@
 	};
 
 	reg_display: regulator@45 {
-		status = "disabled";
+		status = "okay";
 		compatible = "raspberrypi,7inch-touchscreen-panel-regulator";
 		reg = <0x45>;
 	};
 
 	tp_ft5406@38 {
-		status = "disabled";
+		status = "okay";
 		compatible = "edt,edt-ft5406";
 		reg = <0x38>;
 
@@ -1090,8 +1083,7 @@
 
 &vop {
 	status = "okay";
-	assigned-clocks = <&cru DCLK_VOP0>, <&cru DCLK_VOP1>;
-	assigned-clock-parents = <&pmucru PLL_HPLL>, <&cru PLL_VPLL>;
+	vop-supply = <&vdd_logic>;
 };
 
 &vop_mmu {
@@ -1196,15 +1188,15 @@
 };
 
 &video_phy1 {
-	status = "disabled";
+	status = "okay";
 };
 
 &dsi1_in_vp1 {
-	status = "disabled";
+	status = "okay";
 };
 
 &dsi1 {
-	status = "disabled";
+	status = "okay";
 	#address-cells = <1>;
 	#size-cells = <0>;
 
@@ -1212,9 +1204,8 @@
 		status = "okay";
 		compatible = "btt-pitft";
 		reg = <0x0>;
-		vddc-supply = <&reg_display>;
 		#address-cells = <1>;
-		#size-cells = <0>;		
+		#size-cells = <0>;
 
 		ports {
 			#address-cells = <1>;
