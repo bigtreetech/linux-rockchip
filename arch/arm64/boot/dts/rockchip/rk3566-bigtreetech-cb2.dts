@@ -235,7 +235,7 @@
 };
 
 &hdmi {
-	status = "disabled";
+	status = "okay";
 	rockchip,phy-table =
 		<92812500  0x8009 0x0000 0x0270>,
 		<165000000 0x800b 0x0000 0x026d>,
@@ -246,15 +246,11 @@
 };
 
 &hdmi_in_vp0 {
-	status = "disabled";
-};
-
-&hdmi_in_vp1 {
-	status = "disabled";
+	status = "okay";
 };
 
 &hdmi_sound {
-	status = "disabled";
+	status = "okay";
 };
 
 &i2c0 {
@@ -874,11 +870,6 @@
 	status = "okay";
 };
 
-&route_hdmi {
-	status = "disabled";
-	connect = <&vp0_out_hdmi>;
-};
-
 &saradc {
 	status = "okay";
 	vref-supply = <&vcca_1v8>;
@@ -1084,6 +1075,8 @@
 &vop {
 	status = "okay";
 	vop-supply = <&vdd_logic>;
+	assigned-clocks = <&cru DCLK_VOP0>, <&cru DCLK_VOP1>;
+	assigned-clock-parents = <&pmucru PLL_HPLL>, <&cru PLL_VPLL>;
 };
 
 &vop_mmu {
