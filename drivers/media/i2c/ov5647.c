@@ -36,6 +36,7 @@
  * SCCB to initialize sensor."
  */
 #define PWDN_ACTIVE_DELAY_MS	20
+#define OV5647_LANES  2
 
 #define MIPI_CTRL00_CLOCK_LANE_GATE		BIT(5)
 #define MIPI_CTRL00_LINE_SYNC_ENABLE		BIT(4)
@@ -1132,12 +1133,22 @@ static int ov5647_get_selection(struct v4l2_subdev *sd,
 	return -EINVAL;
 }
 
+static int ov5647_g_mbus_config(struct v4l2_subdev *sd, unsigned int pad_id,
+				struct v4l2_mbus_config *config)
+{
+	config->type = V4L2_MBUS_CSI2_DPHY;
+	config->bus.mipi_csi2.num_data_lanes = OV5647_LANES;
+
+	return 0;
+}
+
 static const struct v4l2_subdev_pad_ops ov5647_subdev_pad_ops = {
 	.enum_mbus_code		= ov5647_enum_mbus_code,
 	.enum_frame_size	= ov5647_enum_frame_size,
 	.set_fmt		= ov5647_set_pad_fmt,
 	.get_fmt		= ov5647_get_pad_fmt,
 	.get_selection		= ov5647_get_selection,
+	.get_mbus_config	= ov5647_g_mbus_config,
 };
 
 static const struct v4l2_subdev_ops ov5647_subdev_ops = {
