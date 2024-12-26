@@ -124,6 +124,7 @@ struct ov5647 {
 	struct v4l2_ctrl		*exposure;
 	struct v4l2_ctrl		*hflip;
 	struct v4l2_ctrl		*vflip;
+	struct v4l2_ctrl		*link_freq;
 	bool				streaming;
 };
 
@@ -503,6 +504,13 @@ static struct regval_list ov5647_640x480_10bpp[] = {
 	{0x4800, 0x34},
 	{0x3503, 0x03},
 	{0x0100, 0x01},
+};
+
+static const s64 link_freq_menu_items[] = {
+	175000000,
+	163333400,
+	163333400,
+	110000000,
 };
 
 static const struct ov5647_mode ov5647_modes[] = {
@@ -1396,6 +1404,9 @@ static int ov5647_init_controls(struct ov5647 *sensor, struct device *dev)
 	struct v4l2_fwnode_device_properties props;
 
 	v4l2_ctrl_handler_init(&sensor->ctrls, 8);
+
+	sensor->link_freq = v4l2_ctrl_new_int_menu(&sensor->ctrls, NULL, V4L2_CID_LINK_FREQ,
+				      ARRAY_SIZE(link_freq_menu_items) - 1, 0, link_freq_menu_items);
 
 	v4l2_ctrl_new_std(&sensor->ctrls, &ov5647_ctrl_ops,
 			  V4L2_CID_AUTOGAIN, 0, 1, 1, 0);
