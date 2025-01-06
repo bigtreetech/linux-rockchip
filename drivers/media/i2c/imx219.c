@@ -28,6 +28,8 @@
 #include <media/v4l2-mediabus.h>
 #include <asm/unaligned.h>
 
+#define PWDN_ACTIVE_DELAY_MS	500
+
 #define IMX219_REG_VALUE_08BIT		1
 #define IMX219_REG_VALUE_16BIT		2
 
@@ -455,7 +457,8 @@ struct imx219 {
 	struct clk *xclk; /* system clock to IMX219 */
 	u32 xclk_freq;
 
-	struct gpio_desc *reset_gpio;
+	struct gpio_desc **pwdn_gpios;
+	int num_pwdn;
 	struct regulator_bulk_data supplies[IMX219_NUM_SUPPLIES];
 
 	struct v4l2_ctrl_handler ctrl_handler;
@@ -1083,6 +1086,20 @@ err_unlock:
 	return ret;
 }
 
+static int sensor_pwdn_set_value(struct imx219 * sensor, int value) {
+	int i;
+
+	if (!sensor->num_pwdn)
+		return -1;
+	if (!sensor->pwdn_gpios)
+		return -1;
+	for (i = 0; i < sensor->num_pwdn; i++) {
+		struct gpio_desc *pwdn = sensor->pwdn_gpios[i];
+		gpiod_set_value_cansleep(pwdn, value);
+	}
+	return 0;
+}
+
 /* Power/clock management functions */
 static int imx219_power_on(struct device *dev)
 {
@@ -1098,6 +1115,12 @@ static int imx219_power_on(struct device *dev)
 		return ret;
 	}
 
+	dev_dbg(dev, "IMX219 power on\n");
+
+	if(!sensor_pwdn_set_value(imx219, 0)) {
+		msleep(PWDN_ACTIVE_DELAY_MS);
+	}
+
 	ret = clk_prepare_enable(imx219->xclk);
 	if (ret) {
 		dev_err(dev, "%s: failed to enable clock\n",
@@ -1105,13 +1128,13 @@ static int imx219_power_on(struct device *dev)
 		goto reg_off;
 	}
 
-	gpiod_set_value_cansleep(imx219->reset_gpio, 1);
 	usleep_range(IMX219_XCLR_MIN_DELAY_US,
 		     IMX219_XCLR_MIN_DELAY_US + IMX219_XCLR_DELAY_RANGE_US);
 
 	return 0;
 
 reg_off:
+	sensor_pwdn_set_value(imx219, 1);
 	regulator_bulk_disable(IMX219_NUM_SUPPLIES, imx219->supplies);
 
 	return ret;
@@ -1122,7 +1145,8 @@ static int imx219_power_off(struct device *dev)
 	struct v4l2_subdev *sd = dev_get_drvdata(dev);
 	struct imx219 *imx219 = to_imx219(sd);
 
-	gpiod_set_value_cansleep(imx219->reset_gpio, 0);
+	dev_dbg(dev, "IMX219 power off\n");
+	sensor_pwdn_set_value(imx219, 1);
 	regulator_bulk_disable(IMX219_NUM_SUPPLIES, imx219->supplies);
 	clk_disable_unprepare(imx219->xclk);
 
@@ -1400,7 +1424,7 @@ static int imx219_probe(struct i2c_client *client)
 {
 	struct device *dev = &client->dev;
 	struct imx219 *imx219;
-	int ret;
+	int i, ret;
 
 	imx219 = devm_kzalloc(&client->dev, sizeof(*imx219), GFP_KERNEL);
 	if (!imx219)
@@ -1432,9 +1456,33 @@ static int imx219_probe(struct i2c_client *client)
 		return ret;
 	}
 
-	/* Request optional enable pin */
-	imx219->reset_gpio = devm_gpiod_get_optional(dev, "reset",
-						     GPIOD_OUT_HIGH);
+	/* Request the power down GPIO asserted. */
+	imx219->num_pwdn = gpiod_count(dev, "pwdn");
+	imx219->num_pwdn = imx219->num_pwdn ?: 1;
+
+	imx219->pwdn_gpios = devm_kcalloc(dev, imx219->num_pwdn,
+					  sizeof(*imx219->pwdn_gpios),
+					  GFP_KERNEL);
+	if (!imx219->pwdn_gpios)
+		return -ENOMEM;
+
+	for (i = 0; i < imx219->num_pwdn; i++) {
+		imx219->pwdn_gpios[i] = devm_gpiod_get_index_optional(dev, "pwdn", i,
+							     GPIOD_OUT_HIGH);
+		if (IS_ERR(imx219->pwdn_gpios[i])) {
+			dev_err(dev, "Failed to get 'pwdn[%d]' gpio\n", i);
+			return -EINVAL;
+		}
+
+		if (imx219->pwdn_gpios[i]) {
+			char *gpioname;
+
+			gpioname = devm_kasprintf(dev, GFP_KERNEL, "PWDN%d", i);
+			if (!gpioname)
+				return -ENOMEM;
+			gpiod_set_consumer_name(imx219->pwdn_gpios[i], gpioname);
+		}
+	}
 
 	/*
 	 * The sensor must be powered for imx219_identify_module()
