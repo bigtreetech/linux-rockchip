@@ -135,7 +135,7 @@
 	rk809_sound: rk809-sound {
 		status = "okay";
 		compatible = "rockchip,multicodecs-card";
-		rockchip,card-name = "rockchip-rk809";
+		rockchip,card-name = "Analog RK809";
 		hp-det-gpio = <&gpio0 RK_PC6 GPIO_ACTIVE_LOW>;
 		rockchip,format = "i2s";
 		rockchip,mclk-fs = <256>;
@@ -145,25 +145,45 @@
 		pinctrl-0 = <&hp_det>;
 	};
 
+	bt_sco: bt-sco {
+		status = "disabled";
+		compatible = "delta,dfbmcs320";
+		#sound-dai-cells = <0>;
+	};
+
 	bt_sound: bt-sound {
-		status = "okay";
+		status = "disabled";
 		compatible = "simple-audio-card";
-		simple-audio-card,format = "dsp_b";
-		simple-audio-card,name = "Bluetooth";
+		simple-audio-card,format = "dsp_a";
 		simple-audio-card,bitclock-inversion;
 		simple-audio-card,mclk-fs = <256>;
+		simple-audio-card,name = "Bluetooth";
 		simple-audio-card,cpu {
 			sound-dai = <&i2s2_2ch>;
 		};
 		simple-audio-card,codec {
-			sound-dai = <&bt_sco_codec>;
+			sound-dai = <&bt_sco>;
 		};
 	};
 
-	bt_sco_codec: bt-sco-codec {
+	spdif_out: spdif-out {
 		status = "okay";
 		#sound-dai-cells = <0>;
-		compatible = "linux,bt-sco";
+		compatible = "linux,spdif-dit";
+	};
+
+	spdif_sound: spdif-sound {
+		status = "okay";
+		compatible = "simple-audio-card";
+		simple-audio-card,name = "SPDIF";
+
+		simple-audio-card,cpu {
+			sound-dai = <&spdif_8ch>;
+		};
+
+		simple-audio-card,codec {
+			sound-dai = <&spdif_out>;
+		};
 	};
  
 	sdio_pwrseq: sdio-pwrseq {
@@ -183,10 +203,24 @@
 		reset-gpios = <&gpio2 RK_PB2 GPIO_ACTIVE_LOW>;
 	};
 
-	ext_cam_ov5647_clk: external-camera-ov5647-clock {
+	gmac1_clkin: external-gmac1-clock {
+		compatible = "fixed-clock";
+		clock-frequency = <125000000>;
+		clock-output-names = "gmac1_clkin";
+		#clock-cells = <0>;
+	};
+
+	ext_cam_clk_ov5647: external-camera-clock-ov5647 {
 		compatible = "fixed-clock";
 		clock-frequency = <25000000>;
-		clock-output-names = "ext_cam_ov5647_clk";
+		clock-output-names = "ext_cam_clk_ov5647";
+		#clock-cells = <0>;
+	};
+
+	ext_cam_clk_imx219: ext-cam-clk-imx219 {
+		compatible = "fixed-clock";
+		clock-frequency = <24000000>;
+		clock-output-names = "ext_cam_clk_imx219";
 		#clock-cells = <0>;
 	};
 
@@ -195,6 +229,7 @@
 		#clock-cells = <0>;
 		clock-frequency  = <12000000>;
 	};
+
 };
 
 
@@ -236,13 +271,6 @@
 
 &hdmi {
 	status = "okay";
-	rockchip,phy-table =
-		<92812500  0x8009 0x0000 0x0270>,
-		<165000000 0x800b 0x0000 0x026d>,
-		<185625000 0x800b 0x0000 0x01ed>,
-		<297000000 0x800b 0x0000 0x01ad>,
-		<594000000 0x8029 0x0000 0x0088>,
-		<000000000 0x0000 0x0000 0x0000>;
 };
 
 &hdmi_in_vp0 {
@@ -250,6 +278,10 @@
 };
 
 &hdmi_sound {
+	status = "okay";
+};
+
+&spdif_8ch {
 	status = "okay";
 };
 
@@ -341,7 +373,7 @@
 		};
 
 		rk809_codec: codec {
-			#sound-dai-cells = <1>;
+			#sound-dai-cells = <0>;
 			compatible = "rockchip,rk809-codec", "rockchip,rk817-codec";
 			clocks = <&cru I2S1_MCLKOUT>;
 			clock-names = "mclk";
@@ -557,20 +589,50 @@
 	};
 
 	ov5647: ov5647@36 {
-		status = "disabled";
+		status = "okay";
 		compatible = "ovti,ov5647";
 		reg = <0x36>;
-		clocks = <&ext_cam_ov5647_clk>;
-		clock-names = "ext_cam_ov5647_clk";
-		pwdn-gpios = <&gpio2 RK_PC6 GPIO_ACTIVE_LOW>;
+
+		clocks = <&ext_cam_clk_ov5647>;
+		clock-names = "ext_cam_clk_ov5647";
+		pwdn-gpios = <&gpio4 RK_PA7 GPIO_ACTIVE_LOW>,
+					<&gpio4 RK_PA5 GPIO_ACTIVE_LOW>;
+
 		rockchip,camera-module-index = <0>;
 		rockchip,camera-module-facing = "back";
-		rockchip,camera-module-name = "LMM248";
-		rockchip,camera-module-lens-name = "YXC-M804A2";
+		rockchip,camera-module-name = "rpi-camera-v1p3";
+		rockchip,camera-module-lens-name = "default";
+
 		port {
 			ov5647_out: endpoint {
-				remote-endpoint = <&dphy0_in>;
+				remote-endpoint = <&mipi_in_ucam0>;
 				data-lanes = <1 2>;
+			};
+		};
+	};
+
+	imx219: imx219@10 {
+		status = "okay";
+		compatible = "sony,imx219";
+		reg = <0x10>;
+
+		clocks = <&ext_cam_clk_imx219>;
+		clock-names = "ext_cam_clk_imx219";
+		pwdn-gpios = <&gpio4 RK_PA7 GPIO_ACTIVE_LOW>,
+					<&gpio4 RK_PA5 GPIO_ACTIVE_LOW>;
+
+		rockchip,camera-module-index = <1>;
+		rockchip,camera-module-facing = "front";
+		rockchip,camera-module-name = "rpi-camera-v2";
+		rockchip,camera-module-lens-name = "default";
+
+		port {
+			imx219_out: endpoint {
+				remote-endpoint = <&mipi_in_ucam1>;
+				data-lanes = <1 2>;
+				clock-noncontinuous;
+				link-frequencies =
+					/bits/ 64 <456000000>;
 			};
 		};
 	};
@@ -626,7 +688,9 @@
 };
 
 &i2s2_2ch {
-	status = "okay";
+	status = "disabled";
+	pinctrl-0 = <&i2s2m0_sclktx &i2s2m0_lrcktx &i2s2m0_sdi &i2s2m0_sdo>;
+	rockchip,bclk-fs = <32>;
 };
 
 &iep {
@@ -652,7 +716,7 @@
 &spi1 {
 	#address-cells = <1>;
 	#size-cells = <0>;
-	status = "disabled";
+	status = "okay";
 	pinctrl-names = "default";
 	pinctrl-0 = <&spi1m1_pins>;
 	cs-gpios = <&gpio4 RK_PC6 GPIO_ACTIVE_LOW>,
@@ -695,10 +759,14 @@
 
 &pwm3 {
 	status = "disabled";
+
 	compatible = "rockchip,remotectl-pwm";
+	interrupts = <GIC_SPI 82 IRQ_TYPE_LEVEL_HIGH>;
 	remote_pwm_id = <3>;
 	handle_cpu_id = <1>;
 	remote_support_psci = <0>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pwm3_pins>;
 
 	ir_key {
 		rockchip,usercode = <0xff00>;
@@ -903,70 +971,63 @@
 };
 
 &sdmmc1 {
-	/* WiFi & BT combo module AMPAK AP6256 */
+	status = "okay";
 	#address-cells = <1>;
 	#size-cells = <0>;
+	max-frequency = <150000000>;
 	bus-width = <4>;
-	clock-frequency = <150000000>;
-	no-sd;
-	no-mmc;
 	disable-wp;
-	cap-sdio-irq;
 	cap-sd-highspeed;
-	sd-uhs-sdr104;
+	cap-sdio-irq;
 	keep-power-in-suspend;
 	mmc-pwrseq = <&sdio_pwrseq>;
 	non-removable;
 	pinctrl-names = "default";
 	pinctrl-0 = <&sdmmc1_bus4 &sdmmc1_cmd &sdmmc1_clk>;
-	vmmc-supply = <&vcc_3v3>;
-	vqmmc-supply = <&vcca_1v8>;
-	status = "okay";
+	sd-uhs-sdr104;
+	no-sd;
+	no-mmc;
+	rockchip,default-sample-phase = <90>;
 
-	brcmf: wifi@1 {
+	sdio-wifi@1 {
 		compatible = "brcm,bcm4329-fmac";
-		reg = <1>;
+		reg = <0x1>;
 		interrupt-parent = <&gpio2>;
 		interrupts = <RK_PB1 IRQ_TYPE_LEVEL_HIGH>;
 		interrupt-names = "host-wake";
 		pinctrl-names = "default";
 		pinctrl-0 = <&wifi_host_wake>;
+		
+		brcm,drive-strength = <10>;
 	};
 };
 
 &mdio1 {
-	rgmii_phy0: phy@0 {
+	rgmii_phy1: phy@0 {
 		compatible = "ethernet-phy-ieee802.3-c22";
 		reg = <0x0>;
 	};
 };
 
 &gmac1 {
-	phy-mode = "rgmii";
+	assigned-clocks = <&cru SCLK_GMAC1_RX_TX>, <&cru SCLK_GMAC1_RGMII_SPEED>, <&cru SCLK_GMAC1>;
+	assigned-clock-parents = <&cru SCLK_GMAC1_RGMII_SPEED>, <&cru SCLK_GMAC1>, <&gmac1_clkin>;
 	clock_in_out = "input";
-
-	snps,reset-gpio = <&gpio0 RK_PC5 GPIO_ACTIVE_LOW>;
-	snps,reset-active-low;
-	/* Reset time is 20ms, 100ms for rtl8211f */
-	//snps,reset-delays-us = <0 20000 100000>;
-	snps,reset-delays-us = <0 50000 200000>;
-
-	assigned-clocks = <&cru SCLK_GMAC1_RX_TX>, <&cru SCLK_GMAC1>;
-	assigned-clock-parents = <&cru SCLK_GMAC1_RGMII_SPEED>, <&cru CLK_MAC1_2TOP>;
-	assigned-clock-rates = <0>, <125000000>;
-
+	phy-supply = <&vcc_3v3>;
+	phy-mode = "rgmii";
 	pinctrl-names = "default";
 	pinctrl-0 = <&gmac1m0_miim
-			 &gmac1m0_tx_bus2
-			 &gmac1m0_rx_bus2
-			 &gmac1m0_rgmii_clk
-			 &gmac1m0_clkinout
-			 &gmac1m0_rgmii_bus>;
-
-	tx_delay = <0x30>;
-	rx_delay = <0x10>;
-
-	phy-handle = <&rgmii_phy0>;
+		     &gmac1m0_tx_bus2
+		     &gmac1m0_rx_bus2
+		     &gmac1m0_rgmii_clk
+		     &gmac1m0_clkinout
+		     &gmac1m0_rgmii_bus>;
+	snps,reset-gpio = <&gpio0 RK_PC5 GPIO_ACTIVE_LOW>;
+	snps,reset-active-low;
+	snps,reset-delays-us = <0 20000 100000>;
+	tx_delay = <0x19>;
+	rx_delay = <0x05>;
+	phy-handle = <&rgmii_phy1>;
 	status = "okay";
 };
 
@@ -1096,16 +1157,20 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&uart1m0_xfer &uart1m0_ctsn &uart1m0_rtsn>;
 	uart-has-rtscts;
+	dma-names = "tx", "rx";
 
 	bluetooth {
 		compatible = "brcm,bcm4345c5";
 		clocks = <&rk809 1>;
 		clock-names = "lpo";
-		device-wakeup-gpios = <&gpio2 RK_PC1 GPIO_ACTIVE_HIGH>;
-		host-wakeup-gpios = <&gpio2 RK_PC0 GPIO_ACTIVE_HIGH>;
+		device-wakeup-gpios = <&gpio2 RK_PC0 GPIO_ACTIVE_HIGH>;
+		host-wakeup-gpios = <&gpio2 RK_PC1 GPIO_ACTIVE_HIGH>;
 		shutdown-gpios = <&gpio2 RK_PB7 GPIO_ACTIVE_HIGH>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&bt_host_wake_l &bt_wake_l &bt_enable_h>;
+		//pinctrl-names = "default";
+		//pinctrl-0 = <&bt_host_wake_l &bt_wake_l &bt_enable_h>;
+		vbat-supply = <&vcc3v3_sys>;
+		vddio-supply = <&vcca1v8_pmu>;
+		max-speed = <1500000>; // important!
 	};
 };
 
@@ -1129,12 +1194,17 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 
-			dphy0_in: endpoint@1 {
+			mipi_in_ucam0: endpoint@1 {
 				reg = <1>;
 				remote-endpoint = <&ov5647_out>;
 				data-lanes = <1 2>;
 			};
 
+			mipi_in_ucam1: endpoint@2 {
+				reg = <2>;
+				remote-endpoint = <&imx219_out>;
+				data-lanes = <1 2>;
+			};
 		};
 
 		port@1 {
