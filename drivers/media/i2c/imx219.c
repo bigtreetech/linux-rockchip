@@ -29,6 +29,7 @@
 #include <asm/unaligned.h>
 
 #define PWDN_ACTIVE_DELAY_MS	500
+#define IMX219_LANES			2
 
 #define IMX219_REG_VALUE_08BIT		1
 #define IMX219_REG_VALUE_16BIT		2
@@ -1307,6 +1308,14 @@ static int imx219_identify_module(struct imx219 *imx219)
 	return 0;
 }
 
+static int imx219_g_mbus_config(struct v4l2_subdev *sd, unsigned int pad_id,
+				struct v4l2_mbus_config *config)
+{
+	config->type = V4L2_MBUS_CSI2_DPHY;
+	config->bus.mipi_csi2.num_data_lanes = IMX219_LANES;
+	return 0;
+}
+
 static const struct v4l2_subdev_core_ops imx219_core_ops = {
 	.subscribe_event = v4l2_ctrl_subdev_subscribe_event,
 	.unsubscribe_event = v4l2_event_subdev_unsubscribe,
@@ -1322,6 +1331,7 @@ static const struct v4l2_subdev_pad_ops imx219_pad_ops = {
 	.set_fmt = imx219_set_pad_format,
 	.get_selection = imx219_get_selection,
 	.enum_frame_size = imx219_enum_frame_size,
+	.get_mbus_config	= imx219_g_mbus_config,
 };
 
 static const struct v4l2_subdev_ops imx219_subdev_ops = {
