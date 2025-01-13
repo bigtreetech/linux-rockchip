@@ -21,6 +21,8 @@
 #include <linux/module.h>
 #include <linux/pm_runtime.h>
 #include <linux/regulator/consumer.h>
+#include <linux/of_graph.h>
+#include <linux/rk-camera-module.h>
 #include <media/v4l2-ctrls.h>
 #include <media/v4l2-device.h>
 #include <media/v4l2-event.h>
@@ -30,6 +32,7 @@
 
 #define PWDN_ACTIVE_DELAY_MS	500
 #define IMX219_LANES			2
+#define IMX219_NAME				"imx219"
 
 #define IMX219_REG_VALUE_08BIT		1
 #define IMX219_REG_VALUE_16BIT		2
@@ -508,6 +511,11 @@ struct imx219 {
 
 	/* Streaming on/off */
 	bool streaming;
+
+	u32				module_index;
+	const char		*module_facing;
+	const char		*module_name;
+	const char		*len_name;
 };
 
 static inline struct imx219 *to_imx219(struct v4l2_subdev *_sd)
@@ -1316,9 +1324,34 @@ static int imx219_g_mbus_config(struct v4l2_subdev *sd, unsigned int pad_id,
 	return 0;
 }
 
+static void imx219_get_module_inf(struct imx219 *sensor,
+				  struct rkmodule_inf *inf)
+{
+	memset(inf, 0, sizeof(*inf));
+	strscpy(inf->base.sensor, IMX219_NAME, sizeof(inf->base.sensor));
+	strscpy(inf->base.module, sensor->module_name, sizeof(inf->base.module));
+	strscpy(inf->base.lens, sensor->len_name, sizeof(inf->base.lens));
+}
+
+static long imx219_ioctl(struct v4l2_subdev *sd, unsigned int cmd, void *arg)
+{
+	struct imx219 *sensor = to_imx219(sd);
+	long ret = 0;
+	switch (cmd) {
+	case RKMODULE_GET_MODULE_INFO:
+		imx219_get_module_inf(sensor, (struct rkmodule_inf *)arg);
+		break;
+	default:
+		ret = -ENOIOCTLCMD;
+		break;
+	}
+	return ret;
+}
+
 static const struct v4l2_subdev_core_ops imx219_core_ops = {
 	.subscribe_event = v4l2_ctrl_subdev_subscribe_event,
 	.unsubscribe_event = v4l2_event_subdev_unsubscribe,
+	.ioctl	= imx219_ioctl,
 };
 
 static const struct v4l2_subdev_video_ops imx219_video_ops = {
@@ -1517,15 +1550,60 @@ error_out:
 	return ret;
 }
 
+static int imx219_parse_dt(struct imx219 *sensor, struct device_node *np)
+{
+	struct v4l2_fwnode_endpoint bus_cfg = {
+		.bus_type = V4L2_MBUS_CSI2_DPHY,
+	};
+	struct device_node *ep;
+	int ret;
+
+	ep = of_graph_get_next_endpoint(np, NULL);
+	if (!ep)
+		return -EINVAL;
+
+	ret = v4l2_fwnode_endpoint_parse(of_fwnode_handle(ep), &bus_cfg);
+	if (ret)
+		goto out;
+
+out:
+	of_node_put(ep);
+
+	return ret;
+}
+
 static int imx219_probe(struct i2c_client *client)
 {
+	struct device_node *np = client->dev.of_node;
 	struct device *dev = &client->dev;
 	struct imx219 *imx219;
+	char facing[2];
 	int i, ret;
 
 	imx219 = devm_kzalloc(&client->dev, sizeof(*imx219), GFP_KERNEL);
 	if (!imx219)
 		return -ENOMEM;
+
+	if (IS_ENABLED(CONFIG_OF) && np) {
+		ret = imx219_parse_dt(imx219, np);
+		if (ret) {
+			dev_err(dev, "DT parsing error: %d\n", ret);
+			return ret;
+		}
+	}
+
+	ret = of_property_read_u32(np, RKMODULE_CAMERA_MODULE_INDEX,
+				   &imx219->module_index);
+	ret |= of_property_read_string(np, RKMODULE_CAMERA_MODULE_FACING,
+				       &imx219->module_facing);
+	ret |= of_property_read_string(np, RKMODULE_CAMERA_MODULE_NAME,
+				       &imx219->module_name);
+	ret |= of_property_read_string(np, RKMODULE_CAMERA_LENS_NAME,
+				       &imx219->len_name);
+	if (ret) {
+		dev_err(dev, "could not get module information!\n");
+		return -EINVAL;
+	}
 
 	v4l2_i2c_subdev_init(&imx219->sd, client, &imx219_subdev_ops);
 
@@ -1631,6 +1709,16 @@ static int imx219_probe(struct i2c_client *client)
 		goto error_handler_free;
 	}
 
+	memset(facing, 0, sizeof(facing));
+	if (strcmp(imx219->module_facing, "back") == 0)
+		facing[0] = 'b';
+	else
+		facing[0] = 'f';
+
+	snprintf(imx219->sd.name, sizeof(imx219->sd.name), "m%02d_%s_%s %s",
+		imx219->module_index, facing,
+		IMX219_NAME, dev_name(imx219->sd.dev));
+
 	ret = v4l2_async_register_subdev_sensor(&imx219->sd);
 	if (ret < 0) {
 		dev_err(dev, "failed to register sensor sub-device: %d\n", ret);
@@ -1684,7 +1772,7 @@ static const struct dev_pm_ops imx219_pm_ops = {
 
 static struct i2c_driver imx219_i2c_driver = {
 	.driver = {
-		.name = "imx219",
+		.name = IMX219_NAME,
 		.of_match_table	= imx219_dt_ids,
 		.pm = &imx219_pm_ops,
 	},
