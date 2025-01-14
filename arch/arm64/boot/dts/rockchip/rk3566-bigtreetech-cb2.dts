@@ -224,6 +224,30 @@
 		#clock-cells = <0>;
 	};
 
+	imx219_vana_2v8: 2p8v {
+		compatible = "regulator-fixed";
+		regulator-name = "camera_vana";
+		regulator-min-microvolt = <2800000>;
+		regulator-max-microvolt = <2800000>;
+		regulator-always-on;
+	};
+
+	imx219_vdig_1v8: 1p8v {
+		compatible = "regulator-fixed";
+		regulator-name = "camera_vdig";
+		regulator-min-microvolt = <1500000>;
+		regulator-max-microvolt = <1500000>;
+		regulator-always-on;
+	};
+
+	imx219_vddl_1v2: 1p2v {
+		compatible = "regulator-fixed";
+		regulator-name = "camera_vddl";
+		regulator-min-microvolt = <1200000>;
+		regulator-max-microvolt = <1200000>;
+		regulator-always-on;
+	};
+
 	mcp2515_clock: mcp2515_clock {
 		compatible = "fixed-clock";
 		#clock-cells = <0>;
@@ -271,6 +295,8 @@
 
 &hdmi {
 	status = "okay";
+	avdd-0v9-supply = <&vdda0v9_image>;
+	avdd-1v8-supply = <&vcca1v8_image>;
 };
 
 &hdmi_in_vp0 {
@@ -616,6 +642,10 @@
 		compatible = "sony,imx219";
 		reg = <0x10>;
 
+		VANA-supply = <&imx219_vana_2v8>;
+		VDIG-supply = <&imx219_vdig_1v8>;
+		VDDL-supply = <&imx219_vddl_1v2>;
+
 		clocks = <&ext_cam_clk_imx219>;
 		clock-names = "ext_cam_clk_imx219";
 		pwdn-gpios = <&gpio4 RK_PA7 GPIO_ACTIVE_LOW>,
@@ -647,6 +677,8 @@
 		status = "okay";
 		compatible = "edt,edt-ft5406";
 		reg = <0x38>;
+		vcc-supply = <&vcc3v3_sys>;
+		iovcc-supply = <&vcc3v3_sys>;
 
 		touchscreen-size-x = <800>;
 		touchscreen-size-y = <480>;
@@ -929,8 +961,9 @@
 };
 
 &rknpu {
-	rknpu-supply = <&vdd_npu>;
 	status = "okay";
+	rknpu-supply = <&vdd_npu>;
+	mem-supply = <&vdd_npu>;
 };
 
 &rknpu_mmu {
@@ -942,7 +975,19 @@
 	vref-supply = <&vcca_1v8>;
 };
 
+&power {
+	gpu-supply = <&vdd_gpu>;
+	//pipe-supply = <&vcc3v3_sys>;
+	npu-supply = <&vdd_npu>;
+	//vpu-supply = <&vcc3v3_sys>;
+	//rga-supply = <&vcc3v3_sys>;
+	venc-supply = <&vdd_logic>;
+	//rkvdec-supply = <&vcc3v3_sys>;
+	//vi-supply = <&vcc3v3_sys>;
+};
+
 &sdhci {
+	status = "okay";
 	bus-width = <8>;
 	no-sdio;
 	no-sd;
@@ -950,10 +995,12 @@
 	max-frequency = <200000000>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&emmc_clk &emmc_cmd &emmc_bus8>;
-	status = "okay";
+	vmmc-supply = <&vcc3v3_sd>;
+	vqmmc-supply = <&vccio_sd>;
 };
 
 &sdmmc0 {
+	status = "okay";
 	max-frequency = <150000000>;
 	no-sdio;
 	no-mmc;
@@ -962,11 +1009,10 @@
 	cap-sd-highspeed;
 	disable-wp;
 	sd-uhs-sdr104;
-	vmmc-supply = <&vcc3v3_sd>;
-	vqmmc-supply = <&vccio_sd>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&sdmmc0_bus4 &sdmmc0_clk &sdmmc0_cmd &sdmmc0_det>;
-	status = "okay";
+	vmmc-supply = <&vcc3v3_sd>;
+	vqmmc-supply = <&vccio_sd>;
 };
 
 &sdmmc1 {
@@ -986,6 +1032,10 @@
 	sd-uhs-sdr104;
 	no-sd;
 	no-mmc;
+
+	vmmc-supply = <&vcc3v3_sd>;
+	vqmmc-supply = <&vccio_sd>;
+
 	rockchip,default-sample-phase = <90>;
 
 	sdio-wifi@1 {
@@ -1067,10 +1117,12 @@
 };
 
 &u2phy1_host {
+	phy-supply = <&vcc5v0_host2>;
 	status = "okay";
 };
 
 &u2phy1_otg {
+	phy-supply = <&vcc5v0_host3>;
 	status = "okay";
 };
 
@@ -1261,6 +1313,7 @@
 	status = "okay";
 	#address-cells = <1>;
 	#size-cells = <0>;
+	phy-supply = <&vcc3v3_sys>;
 
 	dsi1_panel: panel@0 {
 		status = "okay";
@@ -1268,6 +1321,7 @@
 		reg = <0x0>;
 		#address-cells = <1>;
 		#size-cells = <0>;
+		power-supply = <&vcc3v3_sys>;
 
 		ports {
 			#address-cells = <1>;
