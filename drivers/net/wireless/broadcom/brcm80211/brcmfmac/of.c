@@ -80,7 +80,7 @@ void brcmf_of_probe(struct device *dev, enum brcmf_bus_type bus_type,
 	 * via the device tree. They also have an antenna SKU parameter
 	 */
 	err = of_property_read_string(np, "brcm,board-type", &prop);
-	if (!err)
+	if (!err && strlen(prop))
 		settings->board_type = prop;
 
 	if (!of_property_read_string(np, "apple,antenna-sku", &prop))
