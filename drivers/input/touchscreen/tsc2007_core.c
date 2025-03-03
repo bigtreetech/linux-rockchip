@@ -407,6 +407,14 @@ static int tsc2007_probe(struct i2c_client *client,
 	init_waitqueue_head(&ts->wait);
 	mutex_init(&ts->mlock);
 
+	/* power down the chip (TSC2007_SETUP does not ACK on I2C) */
+	err = tsc2007_xfer(ts, PWRDOWN);
+	if (err < 0) {
+		dev_err(&client->dev,
+			"Touchscreen probe failed, failed to setup chip: %d\n", err);
+		return err;	/* chip does not respond */
+	}
+
 	snprintf(ts->phys, sizeof(ts->phys),
 		 "%s/input0", dev_name(&client->dev));
 
