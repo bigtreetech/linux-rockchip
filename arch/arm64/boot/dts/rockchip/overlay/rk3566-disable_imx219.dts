@@ -1,0 +1,12 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+	// Disable imx219 sensor
+	fragment@0 {
+		target = <&imx219>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+};

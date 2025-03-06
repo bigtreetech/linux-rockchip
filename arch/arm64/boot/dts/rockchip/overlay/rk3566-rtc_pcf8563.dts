@@ -1,0 +1,11 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+	fragment@0 {
+		target = <&rtc_pcf8563>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+};

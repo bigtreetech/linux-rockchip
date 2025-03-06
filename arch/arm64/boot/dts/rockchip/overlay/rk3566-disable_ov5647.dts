@@ -1,0 +1,12 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+	// Disable ov5647 sensor
+	fragment@0 {
+		target = <&ov5647>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+};

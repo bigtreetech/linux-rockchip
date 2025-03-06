@@ -1,0 +1,36 @@
+# overlays fixup script
+# implements (or rather substitutes) overlay arguments functionality
+# using u-boot scripting, environment variables and "fdt" command
+
+setenv decompose_pin 'setexpr tmp_pinctrl sub "GPIO(0|1|2|3|4)_\\S\\d+" "\\1";
+setexpr tmp_bank sub "GPIO\\d_(\\S)\\d+" "\\1";
+test "${tmp_bank}" = "A" && setenv tmp_bank 0;
+test "${tmp_bank}" = "B" && setenv tmp_bank 1;
+test "${tmp_bank}" = "C" && setenv tmp_bank 2;
+test "${tmp_bank}" = "D" && setenv tmp_bank 3;
+setexpr tmp_pin sub "GPIO\\d_\\S(\\d+)" "\\1";
+setexpr tmp_bank ${tmp_bank} * 8;
+setexpr tmp_pin ${tmp_bank} + ${tmp_pin}'
+
+if test -n "${param_gpio_shutdown_pin}"; then
+	if test -n "${param_gpio_shutdown_level}"; then
+		if test "${param_gpio_shutdown_level}" = "0"; then
+			setenv tmp_value 1
+		else
+			setenv tmp_value 0
+		fi
+		setenv tmp_pinctrl "${param_gpio_shutdown_pin}"
+		setenv tmp_bank "${param_gpio_shutdown_pin}"
+		setenv tmp_pin "${param_gpio_shutdown_pin}"
+		run decompose_pin
+		fdt get value tmp_pinctrl /__symbols__	gpio${tmp_pinctrl}
+		fdt get value tmp_phandle ${tmp_pinctrl} phandle
+		fdt set /gpio_keys/button_power gpios "<${tmp_phandle} 0x000000${tmp_pin} ${tmp_value}>"
+		fdt set /gpio_keys status "okay"
+		env delete tmp_pinctrl tmp_bank tmp_pin tmp_phandle tmp_value
+	fi
+fi
+
+if test -n "${param_tft35_spi_rotate}"; then
+	fdt set /spi@fe620000/st7796s@1 rotate "<${param_tft35_spi_rotate}>"
+fi
