@@ -1,0 +1,128 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+	// Disable DSI
+	fragment@0 {
+		target = <&dsi1>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@1 {
+		target = <&dsi1_panel>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@2 {
+		target = <&dsi1_in_vp1>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@3 {
+		target = <&video_phy1>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@4 {
+		target = <&tp_ft5406>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@5 {
+		target = <&reg_display>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+
+	// Disable HDMI
+	fragment@6 {
+		target = <&hdmi_sound>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@7 {
+		target = <&i2s0_8ch>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@8 {
+		target = <&hdmi>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@9 {
+		target = <&hdmi_in_vp0>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+
+	// Disable vop
+	fragment@10 {
+		target = <&vop>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@11 {
+		target = <&vop_mmu>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@12 {
+		target = <&display_subsystem>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};	
+
+	// Enable TFT35 display
+	fragment@13 {
+		target = <&spi1>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@14 {
+		target = <&tft_35>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	// Enable TFT35 touchscreen
+	fragment@15 {
+		target = <&i2c3>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@16 {
+		target = <&tp_ns2009>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+};

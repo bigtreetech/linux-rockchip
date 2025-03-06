@@ -1,0 +1,33 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+	// Disable HDMI
+	fragment@0 {
+		target = <&hdmi_sound>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@1 {
+		target = <&i2s0_8ch>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@2 {
+		target = <&hdmi>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@3 {
+		target = <&hdmi_in_vp0>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+};

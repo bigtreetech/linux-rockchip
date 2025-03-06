@@ -1,0 +1,27 @@
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/pinctrl/rockchip.h>
+
+/ {
+	fragment@0 {
+		target = <&spi3>;
+
+		__overlay__ {
+			status = "okay";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&spi3m1_pins>;
+			cs-gpios = <&gpio0 RK_PA0 GPIO_ACTIVE_LOW>;
+
+			spidev3_0: spidev@0 {
+				status = "okay";
+				compatible = "rockchip,spidev";
+				spi-max-frequency = <1000000>;
+				reg = <0>;
+			};
+		};
+	};
+};
