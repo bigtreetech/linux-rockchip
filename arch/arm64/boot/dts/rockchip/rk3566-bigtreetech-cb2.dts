@@ -292,6 +292,7 @@
 };
 
 &display_subsystem {
+	status = "disabled";
     /delete-property/ memory-region;
     /delete-property/ memory-region-names;
 };
@@ -682,11 +683,11 @@
 };
 
 &vop_mmu {
-	status = "okay";
+	status = "disabled";
 };
 
 &vop {
-	status = "okay";
+	status = "disabled";
 	vop-supply = <&vdd_logic>;
 	assigned-clocks = <&cru DCLK_VOP0>, <&cru DCLK_VOP1>, <&cru DCLK_VOP2>;
 	assigned-clock-parents = <&pmucru PLL_HPLL>, <&cru PLL_VPLL>, <&cru PLL_GPLL>;
@@ -695,7 +696,7 @@
 };
 
 &hdmi {
-	status = "okay";
+	status = "disabled";
 
 	interrupts = <GIC_SPI 45 IRQ_TYPE_LEVEL_HIGH>,
 				<GIC_SPI 44 IRQ_TYPE_LEVEL_HIGH>;
@@ -705,28 +706,28 @@
 };
 
 &hdmi_in_vp0 {
-	status = "okay";
+	status = "disabled";
 };
 
 &video_phy1 {
-	status = "okay";
+	status = "disabled";
 
 	phy-supply = <&vdd_logic>;
 };
 
 &dsi1_in_vp1 {
-	status = "okay";
+	status = "disabled";
 };
 
 &dsi1 {
-	status = "okay";
+	status = "disabled";
 	#address-cells = <1>;
 	#size-cells = <0>;
 
 	phy-supply = <&vdd_logic>;
 
 	dsi1_panel: panel@0 {
-		status = "okay";
+		status = "disabled";
 		#address-cells = <1>;
 		#size-cells = <0>;
 
@@ -764,7 +765,7 @@
 
 // Audio
 &hdmi_sound {
-	status = "okay";
+	status = "disabled";
 };
 
 &spdif_8ch {
@@ -772,7 +773,7 @@
 };
 
 &i2s0_8ch {
-	status = "okay";
+	status = "disabled";
 };
 
 &i2s1_8ch {
@@ -1395,13 +1396,13 @@
 	};
 
 	reg_display: regulator@45 {
-		status = "okay";
+		status = "disabled";
 		compatible = "raspberrypi,7inch-touchscreen-panel-regulator";
 		reg = <0x45>;
 	};
 
 	tp_ft5406: ft5406@38 {
-		status = "okay";
+		status = "disabled";
 		compatible = "edt,edt-ft5406";
 		reg = <0x38>;
 

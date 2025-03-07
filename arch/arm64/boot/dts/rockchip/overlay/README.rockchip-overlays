@@ -9,12 +9,12 @@ rk3566
 ### Provided overlays:
 
 - disable_csi
-- disable_dsi
-- disable_hdmi
 - disable_imx219
 - disable_ov5647
 - disable_pcie
 - disable_uart2
+- dsi
+- hdmi
 - i2c1
 - i2c3_m0
 - i2c4_m0
@@ -51,16 +51,6 @@ rk3566
 Disable CSI, CIF, ISP and Camera sensors(ov5647 & imx219),
 If we don't use CSI cameras, it will reduce the error messages in the log.
 
-### disable_dsi
-
-Disable DSI, Panel, TouchScreen(ft5406) and LCD backlight,
-If we don't use DSI screen, it will reduce the error messages in the log.
-
-### disable_hdmi
-
-Disable HDMI, HDMI sound(Audio), Audio channel(i2s0_8ch),
-If we don't use HDMI screen, it will reduce the error messages in the log.
-
 ### disable_imx219
 
 Disable Camera sensors(imx219),
@@ -79,6 +69,14 @@ If we don't use pcie devices, it will reduce the error messages in the log.
 ### disable_uart2
 
 Disable UART2 console output, these pins can be used for other features.
+
+### dsi
+
+Activates DSI, Panel, TouchScreen(ft5406) and LCD backlight,
+
+### hdmi
+
+Activates HDMI, HDMI sound(Audio), Audio channel(i2s0_8ch),
 
 UART2 pins (TX, RX):
     GPIO0_D1(gpiochip0/gpio25)

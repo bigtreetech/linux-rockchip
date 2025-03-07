@@ -1,0 +1,55 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+	// Enable vop
+	fragment@0 {
+		target = <&vop>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@1 {
+		target = <&vop_mmu>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@2 {
+		target = <&display_subsystem>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	// Enable HDMI
+	fragment@3 {
+		target = <&hdmi_sound>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@4 {
+		target = <&i2s0_8ch>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@5 {
+		target = <&hdmi>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@6 {
+		target = <&hdmi_in_vp0>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+};
