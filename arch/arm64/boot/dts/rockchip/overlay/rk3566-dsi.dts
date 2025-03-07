@@ -1,0 +1,69 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+	// Enable vop
+	fragment@0 {
+		target = <&vop>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@1 {
+		target = <&vop_mmu>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@2 {
+		target = <&display_subsystem>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	// Disable DSI
+	fragment@3 {
+		target = <&dsi1>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@4 {
+		target = <&dsi1_panel>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@5 {
+		target = <&dsi1_in_vp1>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@6 {
+		target = <&video_phy1>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@7 {
+		target = <&tp_ft5406>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@8 {
+		target = <&reg_display>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+};

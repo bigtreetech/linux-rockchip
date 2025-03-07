@@ -94,12 +94,12 @@ dtbo-$(CONFIG_ARCH_ROCKCHIP) += \
 	rk3528-rock-2-enable-pcie.dtbo \
 	rk3566-roc-pc-sata2.dtbo \
 	rk3566-disable_csi.dtbo \
-	rk3566-disable_dsi.dtbo \
-	rk3566-disable_hdmi.dtbo \
 	rk3566-disable_imx219.dtbo \
 	rk3566-disable_ov5647.dtbo \
 	rk3566-disable_pcie.dtbo \
 	rk3566-disable_uart2.dtbo \
+	rk3566-dsi.dtbo \
+	rk3566-hdmi.dtbo \
 	rk3566-i2c1.dtbo \
 	rk3566-i2c3_m0.dtbo \
 	rk3566-i2c4_m0.dtbo \
