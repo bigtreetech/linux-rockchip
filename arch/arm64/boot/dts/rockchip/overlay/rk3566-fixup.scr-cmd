@@ -16,18 +16,21 @@ if test -n "${param_gpio_shutdown_pin}"; then
 	if test -n "${param_gpio_shutdown_level}"; then
 		if test "${param_gpio_shutdown_level}" = "0"; then
 			setenv tmp_value 1
+			setenv tmp_pull 0x0000012a # &pcfg_pull_up
 		else
 			setenv tmp_value 0
+			setenv tmp_pull 0x00000132 # &pcfg_pull_down
 		fi
 		setenv tmp_pinctrl "${param_gpio_shutdown_pin}"
 		setenv tmp_bank "${param_gpio_shutdown_pin}"
 		setenv tmp_pin "${param_gpio_shutdown_pin}"
 		run decompose_pin
+		fdt set /pinctrl/key/shutdown-pin rockchip,pins "<${tmp_pinctrl} 0x000000${tmp_pin} 0 ${tmp_pull}>"
 		fdt get value tmp_pinctrl /__symbols__	gpio${tmp_pinctrl}
 		fdt get value tmp_phandle ${tmp_pinctrl} phandle
 		fdt set /gpio_keys/button_power gpios "<${tmp_phandle} 0x000000${tmp_pin} ${tmp_value}>"
 		fdt set /gpio_keys status "okay"
-		env delete tmp_pinctrl tmp_bank tmp_pin tmp_phandle tmp_value
+		env delete tmp_pinctrl tmp_bank tmp_pin tmp_phandle tmp_value tmp_pull
 	fi
 fi
 
