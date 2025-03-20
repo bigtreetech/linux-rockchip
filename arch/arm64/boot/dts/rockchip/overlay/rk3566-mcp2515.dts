@@ -6,6 +6,7 @@
 		target = <&spi1>;
 		__overlay__ {
 			status = "okay";
+			rockchip,poll-only = <1>;
 		};
 	};
 
