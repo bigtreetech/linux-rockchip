@@ -278,8 +278,12 @@
 	gpio_keys {
 		compatible = "gpio-keys";
 		status = "disabled";
+		pinctrl-names = "default";
+		pinctrl-0 = <&shutdown_pin>;
+
 		button_power {
 			label = "Power";
+			gpios = <&gpio4 RK_PC2 GPIO_ACTIVE_LOW>;
 			linux,code = <KEY_POWER>;
 			debounce-interval = <100>; // ms
 		};
@@ -431,6 +435,12 @@
 	can {
 		can0_pin_irq: can0-pin-irq {
 			rockchip,pins = <4 RK_PA3 RK_FUNC_GPIO &pcfg_pull_up>;
+		};
+	};
+
+	key {
+		shutdown_pin: shutdown-pin {
+			rockchip,pins = <4 RK_PC2 RK_FUNC_GPIO &pcfg_pull_up>;
 		};
 	};
 };
