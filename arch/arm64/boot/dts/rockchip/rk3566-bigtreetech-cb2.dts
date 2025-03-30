@@ -155,15 +155,17 @@
 
 	rk809_sound: rk809-sound {
 		status = "okay";
-		compatible = "rockchip,multicodecs-card";
-		rockchip,card-name = "Analog RK809";
-		hp-det-gpio = <&gpio0 RK_PC6 GPIO_ACTIVE_LOW>;
-		rockchip,format = "i2s";
-		rockchip,mclk-fs = <256>;
-		rockchip,cpu = <&i2s1_8ch>;
-		rockchip,codec = <&rk809_codec>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&hp_det>;
+		compatible = "simple-audio-card";
+		simple-audio-card,name = "Analog RK809";
+		simple-audio-card,format = "i2s";
+		simple-audio-card,mclk-fs = <256>;
+
+		simple-audio-card,codec {
+			sound-dai = <&rk809_codec>;
+		};
+		simple-audio-card,cpu {
+			sound-dai = <&i2s1_8ch>;
+		};
 	};
 
 	bt_sco: bt-sco {
