@@ -1089,6 +1089,10 @@ Output:
 *******************************************************/
 static void gtp_int_sync(s32 ms, struct goodix_ts_data *ts)
 {
+    if (ts->irq_pin == -ENOENT) {
+        GTP_INFO("gtp_int_sync irq_pin undefined");
+        return;
+    }
     GTP_GPIO_OUTPUT(ts->irq_pin, 0);
     msleep(ms);
     //GTP_GPIO_AS_INT(GTP_INT_PORT);
@@ -1110,6 +1114,14 @@ void gtp_reset_guitar(struct i2c_client *client, s32 ms)
 {
     struct goodix_ts_data *ts = i2c_get_clientdata(client);
 
+    if (ts->rst_pin == -ENOENT) {
+        GTP_INFO("gtp_reset_guitar rst_pin undefined");
+        return;
+    }
+    if (ts->irq_pin == -ENOENT) {
+        GTP_INFO("gtp_reset_guitar irq_pin undefined");
+        return;
+    }
     GTP_DEBUG_FUNC();
     GTP_INFO("Guitar reset");
     GTP_GPIO_OUTPUT(ts->rst_pin, 0);   // begin select I2C slave addr
@@ -1199,7 +1211,11 @@ static s8 gtp_enter_sleep(struct goodix_ts_data * ts)
 #if GTP_COMPATIBLE_MODE
     u8 status_buf[3] = {0x80, 0x44};
 #endif
-    
+    if (ts->irq_pin == -ENOENT) {
+        GTP_INFO("gtp_enter_sleep irq_pin undefined");
+        return -1;
+    }
+
     GTP_DEBUG_FUNC();
     
 #if GTP_COMPATIBLE_MODE
@@ -1255,6 +1271,11 @@ static s8 gtp_wakeup_sleep(struct goodix_ts_data * ts)
     u8 retry = 0;
     s8 ret = -1;
     
+    if (ts->irq_pin == -ENOENT) {
+        GTP_INFO("gtp_wakeup_sleep irq_pin undefined");
+        return -1;
+    }
+
     GTP_DEBUG_FUNC();
 
 #if GTP_COMPATIBLE_MODE
@@ -1825,6 +1846,15 @@ static s8 gtp_request_io_port(struct goodix_ts_data *ts)
 {
     s32 ret = 0;
 
+    if (ts->rst_pin == -ENOENT) {
+        GTP_INFO("gtp_request_io_port rst_pin undefined");
+        return 0;
+    }
+    if (ts->irq_pin == -ENOENT) {
+        GTP_INFO("gtp_request_io_port irq_pin undefined");
+        return 0;
+    }
+
     GTP_DEBUG_FUNC();
 /*
     ret = GTP_GPIO_REQUEST(ts->tp_select_pin, "GTP_tp_select_PORT");
@@ -1885,6 +1915,11 @@ static s8 gtp_request_irq(struct goodix_ts_data *ts)
 {
     s32 ret = -1;
 
+    if (ts->irq_pin == -ENOENT) {
+        GTP_INFO("gtp_request_irq irq_pin undefined");
+        goto test_pit;
+    }
+
     GTP_DEBUG_FUNC();
     GTP_DEBUG("INT trigger type:%x", ts->int_trigger_type);
     
@@ -1916,12 +1951,14 @@ static s8 gtp_request_irq(struct goodix_ts_data *ts)
 test_pit:
     if (ret)
     {
-        GTP_ERROR("Request IRQ failed!ERRNO:%d.", ret);
-        //GTP_GPIO_AS_INPUT(GTP_INT_PORT);
-        gpio_direction_input(ts->irq_pin);
-        //s3c_gpio_setpull(pin, S3C_GPIO_PULL_NONE);
-        
-        GTP_GPIO_FREE(ts->irq_pin);
+        if (ts->irq_pin != -ENOENT) {
+            GTP_ERROR("Request IRQ failed!ERRNO:%d.", ret);
+            //GTP_GPIO_AS_INPUT(GTP_INT_PORT);
+            gpio_direction_input(ts->irq_pin);
+            //s3c_gpio_setpull(pin, S3C_GPIO_PULL_NONE);
+
+            GTP_GPIO_FREE(ts->irq_pin);
+        }
 
         hrtimer_init(&ts->timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
         ts->timer.function = goodix_ts_timer_handler;
@@ -2618,7 +2655,6 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
     enum of_gpio_flags rst_flags, pwr_flags;
     u32 val;
 	printk("%s() start\n", __func__);
-
     
     GTP_DEBUG_FUNC();
     
@@ -2716,6 +2752,7 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
     ts->irq_pin = of_get_named_gpio_flags(np, "touch-gpio", 0, (enum of_gpio_flags *)(&ts->irq_flags));
     ts->rst_pin = of_get_named_gpio_flags(np, "reset-gpio", 0, &rst_flags);
     ts->pwr_pin = of_get_named_gpio_flags(np, "power-gpio", 0, &pwr_flags);
+
     //ts->tp_select_pin = of_get_named_gpio_flags(np, "tp-select-gpio", 0, &tp_select_flags);
     if (of_property_read_u32(np, "max-x", &val)) {
     	dev_err(&client->dev, "no max-x defined\n");
@@ -2865,9 +2902,13 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
     return 0;
 
 probe_init_error:
-    printk("   <%s>_%d  prob error !!!!!!!!!!!!!!!\n", __func__, __LINE__);    
-    GTP_GPIO_FREE(ts->rst_pin);
-    GTP_GPIO_FREE(ts->irq_pin);
+    printk("   <%s>_%d  prob error !!!!!!!!!!!!!!!\n", __func__, __LINE__);
+    if (ts->rst_pin != -ENOENT) {
+        GTP_GPIO_FREE(ts->rst_pin);
+    }
+    if (ts->irq_pin != -ENOENT) {
+        GTP_GPIO_FREE(ts->irq_pin);
+    }
 probe_init_error_requireio:
     tp_unregister_fb(&ts->tp); 
     kfree(ts);

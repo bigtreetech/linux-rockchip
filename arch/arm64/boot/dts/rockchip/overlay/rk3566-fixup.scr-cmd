@@ -34,6 +34,7 @@ if test -n "${param_gpio_shutdown_pin}"; then
 	fi
 fi
 
-if test -n "${param_tft35_spi_rotate}"; then
-	fdt set /spi@fe620000/st7796s@1 rotate "<${param_tft35_spi_rotate}>"
+if test -n "${param_fbtft_spi_rotate}"; then
+	fdt set /spi@fe620000/st7796s@1 rotate "<${param_fbtft_spi_rotate}>"
+	fdt set /spi@fe620000/nv3041a@1 rotate "<${param_fbtft_spi_rotate}>"
 fi

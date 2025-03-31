@@ -2,7 +2,7 @@
 /plugin/;
 
 / {
-	// Enable TFT35 display
+	// Enable TFT43 display
 	fragment@0 {
 		target = <&spi1>;
 		__overlay__ {
@@ -11,13 +11,13 @@
 	};
 
 	fragment@1 {
-		target = <&tft_35>;
+		target = <&tft_43>;
 		__overlay__ {
 			status = "okay";
 		};
 	};
 
-	// Enable TFT35 touchscreen
+	// Enable TFT43 touchscreen
 	fragment@2 {
 		target = <&i2c3>;
 		__overlay__ {
@@ -26,7 +26,7 @@
 	};
 
 	fragment@3 {
-		target = <&tp_tft35>;
+		target = <&tp_tft43>;
 		__overlay__ {
 			status = "okay";
 		};
