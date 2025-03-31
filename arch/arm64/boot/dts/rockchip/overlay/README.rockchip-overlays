@@ -37,6 +37,7 @@ rk3566
 - spidev1_2
 - spidev3_0_m1
 - tft35_spi
+- tft43_spi
 - uart0_ctsn_rtsn
 - uart0
 - uart3_m0
@@ -220,9 +221,9 @@ SPI3 m1 CS0 pins (MOSI, MISO, SCK, CS):
     GPIO4_C2(gpiochip4/gpio18)
     GPIO0_A0(gpiochip0/gpio0)
 
-### tft35_spi
+### tft35_spi / tft43_spi
 
-Activates TFT35 (st7796s) screen.
+Activates TFT35 (st7796s) / TFT43 (nv3041a) screen.
 
 SPI pins: spidev1_1
 DC pin: GPIO0_C7(gpiochip0/gpio23)

@@ -1405,13 +1405,13 @@
 		};
 	};
 
-	reg_display: regulator@45 {
+	bl_dsi: regulator@45 {
 		status = "disabled";
 		compatible = "raspberrypi,7inch-touchscreen-panel-regulator";
 		reg = <0x45>;
 	};
 
-	tp_ft5406: ft5406@38 {
+	tp_dsi: ft5406@38 {
 		status = "disabled";
 		compatible = "edt,edt-ft5406";
 		reg = <0x38>;
@@ -1431,7 +1431,7 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&i2c3m0_xfer>;
 
-	tp_ns2009: ns2009@48 {
+	tp_tft35: ns2009@48 {
 		status = "disabled";
 		compatible = "ti,tsc2007";
 		reg = <0x48>;
@@ -1439,6 +1439,18 @@
 		ti,y-plate-ohms = <660>;
 		ti,fuzzx = <32>;
 		ti,fuzzy = <16>;
+	};
+
+	tp_tft43: gt911@5d {
+		status = "disabled";
+		compatible = "goodix,gt9xx";
+		reg = <0x5d>;
+
+		tp-supply = <&vcc3v3_sys>;
+
+		max-x = <480>;
+		max-y = <272>;
+		tp-size = <9110>;
 	};
 };
 
@@ -1479,6 +1491,25 @@
 		height = <320>;
 		bpp = <24>;
 		bgr;
+		regwidth = <8>;
+		debug = <0x00>;
+		txbuflen = <307200>;
+		spi-cpol;
+		spi-cpha;
+	};
+
+	tft_43: nv3041a@1 {
+		status = "disabled";
+		compatible = "newvision,nv3041a";
+		dc-gpios  = <&gpio0 RK_PC7 GPIO_ACTIVE_HIGH>;
+		reg = <1>;
+		spi-max-frequency = <10000000>;
+		fps = <60>;
+		buswidth = <8>;
+		rotate = <0>;
+		width = <480>;
+		height = <272>;
+		bpp = <24>;
 		regwidth = <8>;
 		debug = <0x00>;
 		txbuflen = <307200>;

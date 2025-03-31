@@ -54,14 +54,14 @@
 	};
 
 	fragment@7 {
-		target = <&tp_ft5406>;
+		target = <&tp_dsi>;
 		__overlay__ {
 			status = "okay";
 		};
 	};
 
 	fragment@8 {
-		target = <&reg_display>;
+		target = <&bl_dsi>;
 		__overlay__ {
 			status = "okay";
 		};

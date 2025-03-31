@@ -122,6 +122,7 @@ dtbo-$(CONFIG_ARCH_ROCKCHIP) += \
 	rk3566-spidev1_2.dtbo \
 	rk3566-spidev3_0_m1.dtbo\
 	rk3566-tft35_spi.dtbo \
+	rk3566-tft43_spi.dtbo \
 	rk3566-uart0_ctsn_rtsn.dtbo \
 	rk3566-uart0.dtbo \
 	rk3566-uart3_m0.dtbo \
