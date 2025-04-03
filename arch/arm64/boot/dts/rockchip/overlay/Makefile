@@ -129,6 +129,7 @@ dtbo-$(CONFIG_ARCH_ROCKCHIP) += \
 	rk3566-uart5_m1.dtbo \
 	rk3566-uart7_m2.dtbo \
 	rk3566-uart9_m1.dtbo \
+	rk3566-ws2812.dtbo \
 	rk3576-can1-m1.dtbo \
 	rk3576-i2c0-m1.dtbo \
 	rk3576-i2c1-m0.dtbo \
