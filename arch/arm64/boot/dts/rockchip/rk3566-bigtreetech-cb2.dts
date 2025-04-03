@@ -277,6 +277,16 @@
 		clock-frequency  = <12000000>;
 	};
 
+	ws2812: ws2812 {
+		compatible = "rgb-ws2812";
+		status = "disabled";
+		pinctrl-names = "default";
+		pinctrl-0 = <&rgb_ws2812_en>;
+		rgb_cnt = <2>;
+		rgb_value = <0x000001 0x010000>;
+		gpios = <&gpio0 RK_PC7 GPIO_ACTIVE_LOW>;
+	};
+
 	gpio_keys {
 		compatible = "gpio-keys";
 		status = "disabled";
@@ -317,6 +327,10 @@
 
 		led_work_en: led-work-en {
 			rockchip,pins = <0 RK_PB7 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+
+		rgb_ws2812_en: rgb-ws2812-en {
+			rockchip,pins = <0 RK_PC7 RK_FUNC_GPIO &pcfg_pull_down_drv_level_15>;
 		};
 
 		gpio_pad7_vibration_en: gpio-pad7-vibration-en {

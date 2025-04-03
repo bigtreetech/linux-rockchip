@@ -278,3 +278,10 @@ Activates UART9.
 UART9 m1 pins(TX, RX):
     GPIO4_C5(gpiochip4/gpio21)
     GPIO4_C6(gpiochip4/gpio22)
+
+### ws2812
+
+Activates RGB ws2812.
+
+ws2812 pin:
+    GPIO0_C7(gpiochip0/gpio23)
