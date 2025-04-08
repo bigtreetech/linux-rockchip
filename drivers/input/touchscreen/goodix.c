@@ -25,6 +25,8 @@
 #include <asm/unaligned.h>
 #include "goodix.h"
 
+#define POLL_INTERVAL_MS 17 /* 17ms = 60fps */
+
 #define GOODIX_GPIO_INT_NAME		"irq"
 #define GOODIX_GPIO_RST_NAME		"reset"
 
@@ -523,6 +525,68 @@ static int goodix_request_irq(struct goodix_ts_data *ts)
 	return devm_request_threaded_irq(&ts->client->dev, ts->client->irq,
 					 NULL, goodix_ts_irq_handler,
 					 ts->irq_flags, ts->client->name, ts);
+}
+
+static irqreturn_t goodix_ts_poll_handler(int irq, void *dev_id)
+{
+	struct goodix_ts_data *ts = dev_id;
+	u8  point_data[2 + GOODIX_MAX_CONTACT_SIZE * GOODIX_MAX_CONTACTS];
+	u8  touch_num;
+	int i, error;
+
+	error = goodix_i2c_read(ts->client,
+				GOODIX_READ_COOR_ADDR, point_data, 1);
+	if (error)
+		goto out;
+
+	if (!(point_data[0] & GOODIX_BUFFER_STATUS_READY))
+		goto out;
+
+	touch_num = point_data[0] & 0x0f;
+	if (touch_num > ts->max_touch_num)
+		goto sync;
+	if (touch_num == 0)
+		goto sync;
+
+	error = goodix_i2c_read(ts->client,
+				GOODIX_READ_COOR_ADDR + 1, point_data + 1,
+				ts->contact_size * touch_num);
+	if (error)
+		goto sync;
+
+	for (i = 0; i < touch_num; i++)
+		if (ts->contact_size == 9)
+			goodix_ts_report_touch_9b(ts,
+				&point_data[1 + ts->contact_size * i]);
+		else
+			goodix_ts_report_touch_8b(ts,
+				&point_data[1 + ts->contact_size * i]);
+
+sync:
+	input_mt_sync_frame(ts->input_dev);
+	input_sync(ts->input_dev);
+
+	goodix_i2c_write_u8(ts->client, GOODIX_READ_COOR_ADDR, 0);
+
+out:
+	return IRQ_HANDLED;
+}
+
+static void goodix_ts_poll_timer(struct timer_list *t)
+{
+	struct goodix_ts_data *ts = from_timer(ts, t, timer);
+
+	schedule_work(&ts->work_i2c_poll);
+	mod_timer(&ts->timer, jiffies + msecs_to_jiffies(POLL_INTERVAL_MS));
+}
+
+static void goodix_ts_work_i2c_poll(struct work_struct *work)
+{
+	struct goodix_ts_data *ts = container_of(work,
+			struct goodix_ts_data, work_i2c_poll);
+
+	goodix_ts_poll_handler(0, ts);
+	// goodix_ts_irq_handler(0, ts);
 }
 
 static int goodix_check_cfg_8(struct goodix_ts_data *ts, const u8 *cfg, int len)
@@ -1255,11 +1319,20 @@ retry_read_config:
 	if (error)
 		return error;
 
-	ts->irq_flags = goodix_irq_flags[ts->int_trigger_type] | IRQF_ONESHOT;
-	error = goodix_request_irq(ts);
-	if (error) {
-		dev_err(&ts->client->dev, "request IRQ failed: %d\n", error);
-		return error;
+	if (ts->gpiod_int) {
+		dev_info(&ts->client->dev, "working in interrupt mode\n");
+		ts->irq_flags = goodix_irq_flags[ts->int_trigger_type] | IRQF_ONESHOT;
+		error = goodix_request_irq(ts);
+		if (error) {
+			dev_err(&ts->client->dev, "request IRQ failed: %d\n", error);
+			return error;
+		}
+	} else {
+		dev_info(&ts->client->dev, "working in polling mode\n");
+		INIT_WORK(&ts->work_i2c_poll, goodix_ts_work_i2c_poll);
+		timer_setup(&ts->timer, goodix_ts_poll_timer, 0);
+		ts->timer.expires = jiffies + msecs_to_jiffies(POLL_INTERVAL_MS);
+		add_timer(&ts->timer);
 	}
 
 	return 0;
@@ -1425,6 +1498,11 @@ reset:
 static void goodix_ts_remove(struct i2c_client *client)
 {
 	struct goodix_ts_data *ts = i2c_get_clientdata(client);
+
+	if (!ts->gpiod_int) {
+		del_timer(&ts->timer);
+		cancel_work_sync(&ts->work_i2c_poll);
+	}
 
 	if (ts->load_cfg_from_disk)
 		wait_for_completion(&ts->firmware_loading_complete);
