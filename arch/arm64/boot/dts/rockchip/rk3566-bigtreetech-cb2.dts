@@ -1457,14 +1457,11 @@
 
 	tp_tft43: gt911@5d {
 		status = "disabled";
-		compatible = "goodix,gt9xx";
+		compatible = "goodix,gt911";
 		reg = <0x5d>;
 
-		tp-supply = <&vcc3v3_sys>;
-
-		max-x = <480>;
-		max-y = <272>;
-		tp-size = <9110>;
+		VDDIO-supply = <&vcc3v3_sys>;
+		AVDD28-supply = <&vcc3v3_sys>;
 	};
 };
 
