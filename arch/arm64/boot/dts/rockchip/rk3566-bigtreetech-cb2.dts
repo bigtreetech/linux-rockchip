@@ -705,6 +705,13 @@
 // Display
 &gpu {
 	mali-supply = <&vdd_gpu>;
+	interrupts = <GIC_SPI 39 IRQ_TYPE_LEVEL_HIGH>,
+				<GIC_SPI 41 IRQ_TYPE_LEVEL_HIGH>,
+				<GIC_SPI 40 IRQ_TYPE_LEVEL_HIGH>,
+				<GIC_SPI 39 IRQ_TYPE_LEVEL_HIGH>,
+				<GIC_SPI 41 IRQ_TYPE_LEVEL_HIGH>,
+				<GIC_SPI 40 IRQ_TYPE_LEVEL_HIGH>;
+	interrupt-names = "gpu", "mmu", "job", "GPU", "MMU", "JOB";
 	status = "okay";
 };
 
@@ -954,12 +961,12 @@
 &bus_npu {
 	bus-supply = <&vdd_logic>;
 	pvtm-supply = <&vdd_cpu>;
-	status = "okay";
+	status = "disabled";
 };
 
 &rknpu {
 	rknpu-supply = <&vdd_npu>;
-	mem-supply = <&vdd_logic>;
+	//mem-supply = <&vdd_logic>;
 	interrupt-names = "npu_irq";
 	status = "okay";
 };
