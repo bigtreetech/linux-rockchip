@@ -1,0 +1,28 @@
+fragment@0 {
+	target = <&gpu>;
+	__overlay__ {
+		status = "okay";
+	};
+};
+
+// Enable vop
+fragment@1 {
+	target = <&vop>;
+	__overlay__ {
+		status = "okay";
+	};
+};
+
+fragment@2 {
+	target = <&vop_mmu>;
+	__overlay__ {
+		status = "okay";
+	};
+};
+
+fragment@3 {
+	target = <&display_subsystem>;
+	__overlay__ {
+		status = "okay";
+	};
+};

@@ -1,0 +1,20 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+	#include "rk3566-csi_phy.dtsi"
+
+	fragment@7 {
+		target = <&i2c2>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@8 {
+		target = <&ov5647>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+};

@@ -137,6 +137,43 @@ dtbo-$(CONFIG_ARCH_ROCKCHIP) += \
 	rockchip-rk3588-opp-oc-24ghz.dtbo \
 	rockchip-rk3588-panthor-gpu.dtbo \
 	rk3528-rock-2-enable-pcie.dtbo \
+	rk3566-disable_pcie.dtbo \
+	rk3566-disable_uart2.dtbo \
+	rk3566-dsi.dtbo \
+	rk3566-dsi_i2c1.dtbo \
+	rk3566-hdmi.dtbo \
+	rk3566-i2c1.dtbo \
+	rk3566-i2c3_m0.dtbo \
+	rk3566-i2c4_m0.dtbo \
+	rk3566-imx219.dtbo \
+	rk3566-ir.dtbo \
+	rk3566-mcp2515.dtbo \
+	rk3566-ov5647.dtbo \
+	rk3566-pad7_vibration.dtbo \
+	rk3566-pwm0_m1.dtbo \
+	rk3566-pwm1_m0.dtbo \
+	rk3566-pwm2_m0.dtbo \
+	rk3566-pwm4.dtbo \
+	rk3566-pwm5.dtbo \
+	rk3566-pwm12_m1.dtbo \
+	rk3566-pwm13_m1.dtbo \
+	rk3566-pwm14_m1.dtbo \
+	rk3566-pwm15_m1.dtbo \
+	rk3566-rtc_pcf8563.dtbo \
+	rk3566-rtc_rk808.dtbo \
+	rk3566-spidev1_0.dtbo \
+	rk3566-spidev1_1.dtbo \
+	rk3566-spidev1_2.dtbo \
+	rk3566-spidev3_0_m1.dtbo\
+	rk3566-tft35_spi.dtbo \
+	rk3566-tft43_spi.dtbo \
+	rk3566-uart0_ctsn_rtsn.dtbo \
+	rk3566-uart0.dtbo \
+	rk3566-uart3_m0.dtbo \
+	rk3566-uart5_m1.dtbo \
+	rk3566-uart7_m2.dtbo \
+	rk3566-uart9_m1.dtbo \
+	rk3566-ws2812.dtbo \
 	rk3566-roc-pc-sata2.dtbo \
 	rk3576-can1-m1.dtbo \
 	rk3576-i2c0-m1.dtbo \
@@ -348,10 +385,13 @@ dtbo-$(CONFIG_ARCH_ROCKCHIP) += \
 	recomputer-rk3588-devkit-halow-wifi.dtbo \
 	recomputer-rk3588-devkit-raspi-7inch-touchscreen.dtbo
 
+scr-$(CONFIG_ARCH_ROCKCHIP) += \
+	rk3566-fixup.scr
+
 dtbotxt-$(CONFIG_ARCH_ROCKCHIP) += \
 	README.rockchip-overlays
 
-targets += $(dtbo-y) $(dtbotxt-y)
+targets += $(dtbo-y) $(scr-y) $(dtbotxt-y)
 
-always-y		:= $(dtbo-y) $(dtbotxt-y)
-clean-files		:= *.dtbo
+always-y		:= $(dtbo-y) $(scr-y) $(dtbotxt-y)
+clean-files		:= *.dtbo *.scr

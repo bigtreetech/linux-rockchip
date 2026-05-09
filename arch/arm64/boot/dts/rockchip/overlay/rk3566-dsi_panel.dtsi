@@ -1,0 +1,30 @@
+#include "rk3566-display.dtsi"
+
+// Enable DSI
+fragment@4 {
+	target = <&dsi1>;
+	__overlay__ {
+		status = "okay";
+	};
+};
+
+fragment@5 {
+	target = <&dsi1_panel>;
+	__overlay__ {
+		status = "okay";
+	};
+};
+
+fragment@6 {
+	target = <&dsi1_in_vp1>;
+	__overlay__ {
+		status = "okay";
+	};
+};
+
+fragment@7 {
+	target = <&video_phy1>;
+	__overlay__ {
+		status = "okay";
+	};
+};

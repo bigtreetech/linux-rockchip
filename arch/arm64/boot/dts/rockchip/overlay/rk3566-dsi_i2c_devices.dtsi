@@ -1,0 +1,19 @@
+bl_dsi: regulator@45 {
+	status = "okay";
+	compatible = "raspberrypi,7inch-touchscreen-panel-regulator";
+	reg = <0x45>;
+};
+
+tp_dsi: ft5406@38 {
+	status = "okay";
+	compatible = "edt,edt-ft5406";
+	reg = <0x38>;
+
+	vcc-supply = <&vcc3v3_sys>;
+	iovcc-supply = <&vcc_3v3>;
+
+	touchscreen-size-x = <800>;
+	touchscreen-size-y = <480>;
+	touchscreen-inverted-x;
+	touchscreen-inverted-y;
+};

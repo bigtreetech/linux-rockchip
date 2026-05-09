@@ -1,0 +1,85 @@
+# overlays fixup script
+# implements (or rather substitutes) overlay arguments functionality
+# using u-boot scripting, environment variables and "fdt" command
+
+setenv decompose_pin 'setexpr tmp_pinctrl sub "GPIO(0|1|2|3|4)_\\S\\d+" "\\1";
+setexpr tmp_bank sub "GPIO\\d_(\\S)\\d+" "\\1";
+test "${tmp_bank}" = "A" && setenv tmp_bank 0;
+test "${tmp_bank}" = "B" && setenv tmp_bank 1;
+test "${tmp_bank}" = "C" && setenv tmp_bank 2;
+test "${tmp_bank}" = "D" && setenv tmp_bank 3;
+setexpr tmp_pin sub "GPIO\\d_\\S(\\d+)" "\\1";
+setexpr tmp_bank ${tmp_bank} * 8;
+setexpr tmp_pin ${tmp_bank} + ${tmp_pin}'
+
+if test -n "${param_gpio_shutdown_pin}"; then
+	if test -n "${param_gpio_shutdown_level}"; then
+		if test "${param_gpio_shutdown_level}" = "0"; then
+			setenv tmp_value 1
+			setenv tmp_pull 0x0000012a # &pcfg_pull_up
+		else
+			setenv tmp_value 0
+			setenv tmp_pull 0x00000132 # &pcfg_pull_down
+		fi
+		setenv tmp_pinctrl "${param_gpio_shutdown_pin}"
+		setenv tmp_bank "${param_gpio_shutdown_pin}"
+		setenv tmp_pin "${param_gpio_shutdown_pin}"
+		run decompose_pin
+		fdt set /pinctrl/key/shutdown-pin rockchip,pins "<${tmp_pinctrl} 0x000000${tmp_pin} 0 ${tmp_pull}>"
+		fdt get value tmp_pinctrl /__symbols__	gpio${tmp_pinctrl}
+		fdt get value tmp_phandle ${tmp_pinctrl} phandle
+		fdt set /gpio_keys/button_power gpios "<${tmp_phandle} 0x000000${tmp_pin} ${tmp_value}>"
+		fdt set /gpio_keys status "okay"
+		env delete tmp_pinctrl tmp_bank tmp_pin tmp_phandle tmp_value tmp_pull
+	fi
+fi
+
+if test -n "${param_gpio_ws2812_pin}"; then
+	setenv tmp_value 1
+	setenv tmp_pull 0x00000132 # &pcfg_pull_down
+	setenv tmp_pinctrl "${param_gpio_ws2812_pin}"
+	setenv tmp_bank "${param_gpio_ws2812_pin}"
+	setenv tmp_pin "${param_gpio_ws2812_pin}"
+	run decompose_pin
+	fdt set /pinctrl/leds/rgb-ws2812-en rockchip,pins "<${tmp_pinctrl} 0x000000${tmp_pin} 0 ${tmp_pull}>"
+	fdt get value tmp_pinctrl /__symbols__	gpio${tmp_pinctrl}
+	fdt get value tmp_phandle ${tmp_pinctrl} phandle
+	fdt set /ws2812 gpios "<${tmp_phandle} 0x000000${tmp_pin} ${tmp_value}>"
+	env delete tmp_pinctrl tmp_bank tmp_pin tmp_phandle tmp_value tmp_pull
+fi
+
+if test -n "${param_ws2812_value}"; then
+	setenv tmp_value "${param_ws2812_value}"
+	setexpr tmp_value sub "^<" ""
+	setexpr tmp_value sub ">$" ""
+	setenv tmp_count 0
+	for val in ${tmp_value}
+	do
+		setexpr tmp_count ${tmp_count} + 1
+	done
+	fdt set /ws2812 rgb_value "${param_ws2812_value}"
+	fdt set /ws2812 rgb_cnt "<${tmp_count}>"
+	env delete tmp_value tmp_count
+fi
+
+if test -n "${param_fbtft_spi_rotate}"; then
+	fdt set /spi@fe620000/st7796s@1 rotate "<${param_fbtft_spi_rotate}>"
+	fdt set /spi@fe620000/nv3041a@1 rotate "<${param_fbtft_spi_rotate}>"
+
+	if test "${param_fbtft_spi_rotate}" = "90"; then
+		fdt rm /i2c@fe5c0000/ns2009@48 touchscreen-inverted-x
+		fdt rm /i2c@fe5c0000/ns2009@48 touchscreen-swapped-x-y
+		fdt set /i2c@fe5c0000/gt911@5d touchscreen-inverted-y
+		fdt set /i2c@fe5c0000/gt911@5d touchscreen-swapped-x-y
+	elif test "${param_fbtft_spi_rotate}" = "180"; then
+		fdt rm /i2c@fe5c0000/ns2009@48 touchscreen-inverted-x
+		fdt set /i2c@fe5c0000/ns2009@48 touchscreen-inverted-y
+		fdt set /i2c@fe5c0000/gt911@5d touchscreen-inverted-x
+		fdt set /i2c@fe5c0000/gt911@5d touchscreen-inverted-y
+	elif test "${param_fbtft_spi_rotate}" = "270"; then
+		fdt set /i2c@fe5c0000/ns2009@48 touchscreen-inverted-y
+		fdt rm /i2c@fe5c0000/ns2009@48 touchscreen-swapped-x-y
+		fdt set /i2c@fe5c0000/gt911@5d touchscreen-inverted-x
+		fdt set /i2c@fe5c0000/gt911@5d touchscreen-swapped-x-y
+	fi
+fi

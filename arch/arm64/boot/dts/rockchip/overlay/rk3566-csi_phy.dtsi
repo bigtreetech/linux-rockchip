@@ -1,0 +1,48 @@
+fragment@0 {
+	target = <&rkisp_vir0>;
+	__overlay__ {
+		status = "okay";
+	};
+};
+
+fragment@1 {
+	target = <&rkisp>;
+	__overlay__ {
+		status = "okay";
+	};
+};
+
+fragment@2 {
+	target = <&rkisp_mmu>;
+	__overlay__ {
+		status = "okay";
+	};
+};
+
+fragment@3 {
+	target = <&rkcif>;
+	__overlay__ {
+		status = "okay";
+	};
+};
+
+fragment@4 {
+	target = <&rkcif_mmu>;
+	__overlay__ {
+		status = "okay";
+	};
+};
+
+fragment@5 {
+	target = <&csi2_dphy_hw>;
+	__overlay__ {
+		status = "okay";
+	};
+};
+
+fragment@6 {
+	target = <&csi2_dphy0>;
+	__overlay__ {
+		status = "okay";
+	};
+};

@@ -1,0 +1,19 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+	fragment@0 {
+		target = <&spi1>;
+		__overlay__ {
+			status = "okay";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			spidev1_0: spidev@0 {
+				status = "okay";
+				compatible = "rockchip,spidev";
+				spi-max-frequency = <1000000>;
+				reg = <0>;
+			};
+		};
+	};
+};
