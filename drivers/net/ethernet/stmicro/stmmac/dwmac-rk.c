@@ -25,6 +25,7 @@
 #include <linux/regmap.h>
 #include <linux/pm_runtime.h>
 #include <linux/soc/rockchip/rk_vendor_storage.h>
+#include <linux/jhash.h>
 #include <soc/rockchip/rockchip_csu.h>
 #include "stmmac_platform.h"
 #include "dwmac-rk-tool.h"
@@ -3042,6 +3043,46 @@ int dwmac_rk_get_phy_interface(struct stmmac_priv *priv)
 }
 EXPORT_SYMBOL(dwmac_rk_get_phy_interface);
 
+static int rk_get_eth_addr_from_otp(struct device *dev, unsigned char *addr)
+{
+	struct nvmem_cell *cell;
+	void *buf;
+	size_t len;
+	u32 h1, h2;
+
+	cell = nvmem_cell_get(dev, "soc-id");
+	if (IS_ERR(cell)) {
+		dev_err(dev, "nvmem-cell-names: soc-id get failed");
+		return PTR_ERR(cell);
+	}
+
+	buf = nvmem_cell_read(cell, &len);
+	nvmem_cell_put(cell);
+	if (IS_ERR(buf))
+		return PTR_ERR(buf);
+	if (len < 8) {
+		kfree(buf);
+		return -EINVAL;
+	}
+
+	h1 = jhash(buf, len, 0x35660001);
+	h2 = jhash(buf, len, 0x35660002);
+
+	addr[0] = h1 & 0xff;
+	addr[1] = (h1 >> 8) & 0xff;
+	addr[2] = (h1 >> 16) & 0xff;
+	addr[3] = (h1 >> 24) & 0xff;
+	addr[4] = h2 & 0xff;
+	addr[5] = (h2 >> 8) & 0xff;
+
+	addr[0] &= 0xfe;	/* clear multicast bit */
+	addr[0] |= 0x02;	/* set local assignment bit (IEEE802) */
+
+	kfree(buf);
+
+	return is_valid_ether_addr(addr) ? 0 : -EINVAL;
+}
+
 static void rk_get_eth_addr(void *priv, unsigned char *addr)
 {
 	struct rk_priv_data *bsp_priv = priv;
@@ -3051,6 +3092,12 @@ static void rk_get_eth_addr(void *priv, unsigned char *addr)
 
 	if (is_valid_ether_addr(addr))
 		goto out;
+
+	ret = rk_get_eth_addr_from_otp(dev, addr);
+	if (ret == 0) {
+		dev_info(dev, "rk_get_eth_addr_from_otp(soc-id) done\n");
+		return;
+	}
 
 	if (id < 0 || id >= MAX_ETH) {
 		dev_err(dev, "%s: Invalid ethernet bus id %d\n", __func__, id);
