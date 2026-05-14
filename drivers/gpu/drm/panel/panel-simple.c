@@ -998,7 +998,8 @@ static int panel_simple_probe(struct device *dev, const struct panel_desc *desc)
 	err = drm_panel_of_backlight(&panel->base);
 	if (err) {
 		dev_err_probe(dev, err, "Could not find backlight\n");
-		goto free_ddc;
+		// goto free_ddc;
+		panel->base.backlight = NULL;
 	}
 
 	drm_panel_add(&panel->base);

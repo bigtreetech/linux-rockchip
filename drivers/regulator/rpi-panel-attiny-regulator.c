@@ -62,6 +62,7 @@ static const struct gpio_signal_mappings mappings[NUM_GPIO] = {
 };
 
 struct attiny_lcd {
+	bool present;
 	/* lock to serialise overall accesses to the Atmel */
 	struct mutex	lock;
 	struct regmap	*regmap;
@@ -81,18 +82,27 @@ static const struct regmap_config attiny_regmap_config = {
 
 static int attiny_set_port_state(struct attiny_lcd *state, int reg, u8 val)
 {
+	if (!state || !state->present)
+		return 0;
+
 	state->port_states[reg - REG_PORTA] = val;
 	return regmap_write(state->regmap, reg, val);
 };
 
 static u8 attiny_get_port_state(struct attiny_lcd *state, int reg)
 {
+	if (!state || !state->present)
+		return 0;
+
 	return state->port_states[reg - REG_PORTA];
 };
 
 static int attiny_lcd_power_enable(struct regulator_dev *rdev)
 {
 	struct attiny_lcd *state = rdev_get_drvdata(rdev);
+
+	if (!state || !state->present)
+		return 0;
 
 	mutex_lock(&state->lock);
 
@@ -124,6 +134,9 @@ static int attiny_lcd_power_disable(struct regulator_dev *rdev)
 {
 	struct attiny_lcd *state = rdev_get_drvdata(rdev);
 
+	if (!state || !state->present)
+		return 0;
+
 	mutex_lock(&state->lock);
 
 	regmap_write(rdev->regmap, REG_PWM, 0);
@@ -146,6 +159,9 @@ static int attiny_lcd_power_is_enabled(struct regulator_dev *rdev)
 	struct attiny_lcd *state = rdev_get_drvdata(rdev);
 	unsigned int data;
 	int ret, i;
+
+	if (!state || !state->present)
+		return 0;
 
 	mutex_lock(&state->lock);
 
@@ -190,6 +206,9 @@ static int attiny_update_status(struct backlight_device *bl)
 	int brightness = backlight_get_brightness(bl);
 	int ret, i;
 
+	if (!state || !state->present)
+		return 0;
+
 	mutex_lock(&state->lock);
 
 	for (i = 0; i < 10; i++) {
@@ -218,6 +237,9 @@ static void attiny_gpio_set(struct gpio_chip *gc, unsigned int off, int val)
 	u8 last_val;
 
 	if (off >= NUM_GPIO)
+		return;
+
+	if (!state || !state->present)
 		return;
 
 	mutex_lock(&state->lock);
@@ -298,6 +320,7 @@ static int attiny_i2c_probe(struct i2c_client *i2c,
 	if (!state)
 		return -ENOMEM;
 
+	state->present = true;
 	mutex_init(&state->lock);
 	i2c_set_clientdata(i2c, state);
 
@@ -376,14 +399,18 @@ static int attiny_i2c_probe(struct i2c_client *i2c,
 	return 0;
 
 error:
+	state->present = false;
 	mutex_destroy(&state->lock);
 
-	return ret;
+	return 0;
 }
 
 static void attiny_i2c_remove(struct i2c_client *client)
 {
 	struct attiny_lcd *state = i2c_get_clientdata(client);
+
+	if (!state || !state->present)
+		return;
 
 	mutex_destroy(&state->lock);
 }
